@@ -16,15 +16,10 @@ class RouteHandler(APIHandler):
             return
 
         data = json_decode(self.request.body)
-
-        response = openai.Completion.create(
-            api_key=data.get("api_key"),
-            engine=data.get("engine", "davinci-codex"),
-            prompt=data.get("prompt", ""),
-            max_tokens=data.get("max_tokens", 256),
-            temperature=data.get("temperature", 0.5),
-            stop=data.get("stop", ["####"]),
-        )
+        openai.api_key = data.get("api_key")
+        response = openai.ChatCompletion.create(
+                model=data.get("engine", "gpt-3.5-turbo"),
+                messages=data.get("messages", []))
 
         self.finish(json_encode(response))
 
