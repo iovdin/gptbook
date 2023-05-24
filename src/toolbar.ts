@@ -57,11 +57,11 @@ export class CodexButtonExtension
             const lines = cell.model.value.text.split('\n');
             let role = '';
             const header = lines[0].toLowerCase();
-            if (header.indexOf('assistant') >= 0) {
+            if (header.indexOf('assistant:') >= 0) {
               role = 'assistant';
-            } else if (header.indexOf('user') >= 0) {
+            } else if (header.indexOf('user:') >= 0) {
               role = 'user';
-            } else if (header.indexOf('system') >= 0) {
+            } else if (header.indexOf('system:') >= 0) {
               role = 'system';
             } else {
               return;
