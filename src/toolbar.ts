@@ -94,7 +94,8 @@ export class CodexButtonExtension
               role,
               content,
             };
-          });
+          })
+          .filter(item => item);
 
         const { api_key, engine, max_tokens, temperature } = this.config;
         const xhr = new window.XMLHttpRequest();
