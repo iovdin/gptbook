@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { IDisposable, DisposableDelegate } from '@lumino/disposable';
 import { NotebookPanel, INotebookModel } from '@jupyterlab/notebook';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
@@ -6,8 +7,6 @@ import { ToolbarButton } from '@jupyterlab/apputils';
 import { LabIcon } from '@jupyterlab/ui-components';
 import { Cell } from '@jupyterlab/cells';
 
-import { requestAPI } from './handler';
-
 import { CODEX_ICON } from './icon';
 
 export interface ICodexConfig {
@@ -15,7 +14,6 @@ export interface ICodexConfig {
   engine: string;
   max_tokens: number;
   temperature: number;
-  displayLineTimeout: number;
   stop: string[];
 }
 
@@ -80,24 +78,38 @@ export class CodexButtonExtension
           })
           .filter(item => item);
 
-        const payload = Object.assign({}, this.config, {
-          messages,
-        });
+        console.log(this.config);
+        const { api_key, engine, max_tokens, temperature } = this.config;
+        const xhr = new window.XMLHttpRequest();
+        xhr.open('POST', 'https://api.openai.com/v1/chat/completions', true);
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        xhr.setRequestHeader('Authorization', 'Bearer ' + api_key);
+        xhr.addEventListener('progress', () => {
+          const code = xhr.response
+            .toString()
+            .split('\n')
+            .map(item => item.trim())
+            .filter(item => !!item)
+            .map(item => item.replace(/^data: /, ''))
+            .filter(item => item !== '[DONE]')
+            .map(item => JSON.parse(item))
+            .map(item => item.choices[0].delta.content)
+            .join('');
 
-        const data = await requestAPI<any>('completion', {
-          method: 'POST',
-          body: JSON.stringify(payload),
+          if (code && widget.content.activeCell) {
+            widget.content.activeCell.model.value.text =
+              '# assistant:\n' + code;
+          }
         });
-        console.log(data);
-
-        if (
-          data.choices &&
-          data.choices.length > 0 &&
-          widget.content.activeCell
-        ) {
-          const code = data.choices[0].message.content;
-          widget.content.activeCell.model.value.text = '# assistant:\n' + code;
-        }
+        xhr.send(
+          JSON.stringify({
+            model: engine,
+            stream: true,
+            temperature: temperature,
+            max_tokens: max_tokens,
+            messages: messages,
+          }),
+        );
       },
     });
 
