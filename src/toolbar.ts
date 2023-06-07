@@ -64,7 +64,7 @@ export class CodexButtonExtension
             } else if (header.indexOf('system:') >= 0) {
               role = 'system';
             } else {
-              return;
+              return memo;
             }
 
             let content = lines.slice(1).join('\n');
@@ -92,7 +92,7 @@ export class CodexButtonExtension
             });
             if (outputContent.length) {
               memo.push({
-                role: "user",
+                role: 'user',
                 content:
                   'Result of previous command:\n' + outputContent.join('\n'),
               });
@@ -100,7 +100,6 @@ export class CodexButtonExtension
 
             return memo;
           }, [])
-          .filter(item => item);
 
         const { api_key, engine, max_tokens, temperature } = this.config;
         const xhr = new window.XMLHttpRequest();
