@@ -53,7 +53,7 @@ export class CodexButtonExtension
 
         const messages = notebook
           .filter((cell: Cell, index) => index < widget.content.activeCellIndex)
-          .map((cell: Cell, index) => {
+          .reduce((memo: Array, cell: Cell, index) => {
             const lines = cell.model.value.text.split('\n');
             let role = '';
             const header = lines[0].toLowerCase();
@@ -86,15 +86,20 @@ export class CodexButtonExtension
                 }
               }
             }
-            if (outputContent.length) {
-              content += '\nOutput:\n' + outputContent.join('\n');
-            }
-
-            return {
+            memo.push({
               role,
               content,
-            };
-          })
+            });
+            if (outputContent.length) {
+              memo.push({
+                role: "user",
+                content:
+                  'Result of previous command:\n' + outputContent.join('\n'),
+              });
+            }
+
+            return memo;
+          }, [])
           .filter(item => item);
 
         const { api_key, engine, max_tokens, temperature } = this.config;
